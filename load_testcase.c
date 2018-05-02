@@ -24,13 +24,20 @@ MB_HDR mb_hdr;		/* Header area */
 MIPS mem[1024];		/* Room for 4K bytes */
 int haltflag;
 int PCCOUNT;
+if_id ifid;
+id_ex idex;
+ex_mem exmem;
+mem_wb memwb;
+MIPS RF[32];
 
-int if(int pcc) {
-	return pcc + 4;
+void if(int pcc) {
+	ifid.NPC = pcc + 4;
+	ifid.IR = mem[pcc/4]; 
 }
 
-void id(int *rfil) {
-
+void id(if_id if_id1) {
+	idex.NPC = if_id1.NPC;
+	idex.A = 
 }
 
 void ex() {
