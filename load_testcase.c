@@ -101,7 +101,7 @@ additional files or within a zip);
 		"slt", "sltu"};
 
 	int total_clocks = 0;
-	for (haltflag=0; haltflag; total_clocks++)	/* PC COUNT STAGE */
+	for (haltflag=0; haltflag; total_clocks++)	/* ends if halt flag is active */
 	{	
 		printf("@PC=0x%08X, Opcode=0x%02X, ", i, opcode = mem[i/4] >> 26);
 		PCCOUNT = i;

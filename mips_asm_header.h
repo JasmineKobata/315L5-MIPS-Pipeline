@@ -16,3 +16,29 @@ typedef struct _mb_hdr
   unsigned int filler1;		/* Unused ... reserved for future use. */
   unsigned char filler2[64-16];	/* Overall header is 64 bytes */
   } MB_HDR, *MB_HDR_PTR;
+struct if_id
+  {
+	int NPC;
+	int IR;
+  };
+struct id_ex
+  {
+	int NPC;
+	int A;
+	int B;
+	int Imm;
+	int IR;
+  };
+struct ex_mem
+  {
+	int cond;
+	int AO;
+	int B;
+	int IR;
+  };
+struct mem_wb
+  {
+	int LDM;
+	int AO;
+	int IR;
+  };
