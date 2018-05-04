@@ -36,11 +36,27 @@ void if(int pcc) {
 }
 
 void id(if_id if_id1) {
+	int imm;
+
 	idex.NPC = if_id1.NPC;
-	idex.A = 
+	idex.A = RF[if_id1->IR >> 21) & 15]; /* pull reg value from rs */
+	idex.B = RF[(if_id1->IR >> 16) & 15]; /* pull reg value from rt */
+
+	imm = if_id1->IR & 0xFFFF;
+	if (imm & 0x8000)	/* if imm needs 1 fill for negitive */
+		idex.Imm = ((imm ^ 0xFFFF)+1)*-1;
+	else
+		idex.Imm = imm;
+
+	idex.RS = (if_id1->IR >> 21) & 15;
+	idex.RS = (if_id1->IR >> 16) & 15;
+	idex.op = if_id1->IR >> 26;
+	idex.function = if_id1 & 0x3F;
 }
 
-void ex() {
+void ex(id_ex id_ex1) {
+	exmem.branchpc = id_ex1.NPC + (id_ex1.Imm * 4);
+	
 
 }
 

@@ -27,18 +27,25 @@ struct id_ex
 	int A;
 	int B;
 	int Imm;
-	int IR;
+	int RS;
+	int RT;
+	int op;
+	int function;
   };
 struct ex_mem
   {
+	int branch_pc;
 	int cond;
 	int AO;
 	int B;
-	int IR;
+	int dest;
+	int op;
   };
 struct mem_wb
   {
 	int LDM;
 	int AO;
-	int IR;
+	int dest;
+	int WB;
+	int op;
   };
