@@ -22,6 +22,7 @@ typedef unsigned int MIPS, *MIPS_PTR;
 
 MB_HDR mb_hdr;		/* Header area */
 MIPS mem[1024];		/* Room for 4K bytes */
+MIPS datareg[2048];
 int haltflag;
 int PCCOUNT;
 if_id ifid;
@@ -39,7 +40,7 @@ void id(if_id if_id1) {
 	int imm;
 
 	idex.NPC = if_id1.NPC;
-	idex.A = RF[if_id1->IR >> 21) & 15]; /* pull reg value from rs */
+	idex.A = RF[(if_id1->IR >> 21) & 15]; /* pull reg value from rs */
 	idex.B = RF[(if_id1->IR >> 16) & 15]; /* pull reg value from rt */
 
 	imm = if_id1->IR & 0xFFFF;
@@ -60,11 +61,19 @@ void ex(id_ex id_ex1) {
 
 }
 
-void mem() {
+void mem(ex_mem ex_mem1) {
+  if (cond == 0)
+    PCCOUNT = ex_mem1.branch_pc;
+  else if (cond == 1)
+    PCCOUNT = ex_mem1.AO;
 
+  datareg[ex_mem1.B] = ex_mem1.AO
+    memwb.LDM = datareg[ex_mem1.B];
+
+  memwb.dest = ex_mem1.dest;
 }
 
-void wb() {
+void wb(mem_wb mem_wb1) {
 
 }
 
