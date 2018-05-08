@@ -18,34 +18,34 @@ typedef struct _mb_hdr
   } MB_HDR, *MB_HDR_PTR;
 struct if_id
   {
-	int NPC;
-	int IR;
+	int NPC; /* next pc */
+	int IR; /* instruction */
   };
 struct id_ex
   {
-	int NPC;
-	int A;
-	int B;
-	int Imm;
-	int RS;
-	int RT;
-	int op;
-	int function;
+	int NPC; /* next pc */
+	int A; /* ALU A in */
+	int B; /* ALU B in */
+	int Imm; /* sign extended immediate value */
+	int RS; /* RS field */
+	int RT; /* RT field */
+	int shamt; /* shift amount */
+	int op; /* op code */
+	int function; /* function code */
   };
 struct ex_mem
   {
-	int branch_pc;
-	int cond;
-	int AO;
-	int B;
-	int dest;
-	int op;
+	int branch_pc; /* potentail pc for a branch */
+	int cond; /* zero execption for breq */
+	int AO; /* ALU out */
+	int B; /* B value potentail value being writen to memory */
+	int dest; /* destination of reg wright back */
+	int op; /* op code */
   };
 struct mem_wb
   {
-	int LDM;
-	int AO;
-	int dest;
-	int WB;
-	int op;
+	int LDM; /* Memory output */ 
+	int AO; /* ALU out */
+	int dest; /* write back reg dest */
+	int op; /* op code */
   };

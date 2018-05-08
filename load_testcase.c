@@ -56,9 +56,56 @@ void id(if_id if_id1) {
 }
 
 void ex(id_ex id_ex1) {
-	exmem.branchpc = id_ex1.NPC + (id_ex1.Imm * 4);
+		exmem.branchpc = id_ex1.NPC + (id_ex1.Imm * 4);
+	exmem.op = id_ex1.op;
+	if (id_ex1.op == 0) {
+		switch (id_ex1.Function) {
+			case 0x20 : //add
+			case 0x21 : //add unsigned
+				
+				break;
+			case 0x22 : //sub
+			case 0x23 : //sub unsigned
+		
+				break;
+			case 0x24 : //and
 	
+				break;
+			case 0x27 : //nor
 
+				break;
+			case 0x25 : //or
+
+				break;
+			case 0x26 : //xor
+		
+				break;
+			case 0x00 : //shift left logical
+				
+				break;
+			case 0x02 : //shift right logical
+
+				break;
+			case 0x03 : //shift right arithmetic
+				
+				break;
+			case 0x04 : //shift left logical variable
+				
+				break;
+			case 0x06 : //shift right logical variable
+
+				break;
+			case 0x07 : //shift right arithmetic variable
+
+				break;
+
+			case 0x2A : //set less than
+
+				break;
+			case 0x2B : //set less than unsigned
+	} else {
+		switch (id_ex1.op)
+	}
 }
 
 void mem(ex_mem ex_mem1) {
@@ -66,10 +113,17 @@ void mem(ex_mem ex_mem1) {
     PCCOUNT = ex_mem1.branch_pc;
   else if (cond == 1)
     PCCOUNT = ex_mem1.AO;
+<<<<<<< HEAD
 
   datareg[ex_mem1.B] = ex_mem1.AO
     memwb.LDM = datareg[ex_mem1.B];
 
+=======
+
+  datareg[ex_mem1.B] = ex_mem1.AO
+    memwb.LDM = datareg[ex_mem1.B];
+
+>>>>>>> cf7bb5b21069c9eb7b3cd878c496ef1340a64e57
   memwb.dest = ex_mem1.dest;
 }
 
