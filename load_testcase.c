@@ -20,7 +20,6 @@ MB_HDR mb_hdr;		/* Header area */
 MIPS mem[1024];		/* Room for 4K bytes */
 MIPS datareg[2048];
 int haltflag;
-int PCCOUNT;
 struct if_id ifid;
 struct id_ex idex;
 struct ex_mem exmem;
@@ -28,8 +27,9 @@ struct mem_wb memwb;
 MIPS RF[32];
 
 void fetch() {
-	ifid.NPC = PCCOUNT + 4;
-	ifid.IR = mem[PCCOUNT/4];
+	ifid.IR = mem[ifid.NPC/4];
+	ifid.NPC = ifid.NPC + 4;
+	printf("IR: 0x%08X\n", ifid.IR);
 	ifid.ready = 1;
 }
 
@@ -197,29 +197,31 @@ void memory() {
 	memwb.RegWrite = exmem.RegWrite;
 	memwb.MemtoReg = exmem.MemtoReg;
 	if (exmem.op == 0x02) { //Jump
-		PCCOUNT = (exmem.jumpword * 4) - 4;
+		ifid.NPC = (exmem.jumpword * 4);
 		clear();
 	}
 	else if (exmem.op == 0x03) {
-		RF[31] = PCCOUNT; //JAL
-		PCCOUNT = (exmem.jumpword *  4) - 4;
+		RF[31] = ifid.NPC; //JAL
+		ifid.NPC = (exmem.jumpword *  4);
 		clear();
 	}
 	else if (exmem.op == 0x00 && exmem.function == 0x08) { //JR
-		PCCOUNT = RF[exmem.RS] - 4;
+		ifid.NPC = RF[exmem.RS];
 		clear();
 	}
 	else if (exmem.op == 0x00 && exmem.function == 0x09) { //JALR
-		RF[31] = PCCOUNT;
-		PCCOUNT = RF[exmem.RS] - 4;
+		RF[31] = ifid.NPC;
+		ifid.NPC = RF[exmem.RS];
 		clear();
 	}
-
 	else if ((exmem.op == 0x04 && exmem.cond == 0x01) ||
 		(exmem.op == 0x05 && exmem.cond == 0x00)) {
-		PCCOUNT = exmem.branch_pc;
+		ifid.NPC = exmem.branch_pc;
 		clear();
 	}
+	else if (exmem.op == 0x00 && exmem.cond == 0x0C && RF[2] == 0)
+		haltflag = 1;
+		
 
 	if (exmem.op >= 0x28 && exmem.op <= 0x2B) {
 		datareg[exmem.B] = exmem.AO;
@@ -276,7 +278,9 @@ int main(int argc, char *argv[])
 
 	clear();
 	int total_clocks = 0;
-	for (haltflag=0; haltflag; total_clocks++)	/* ends if halt flag is active */
+	int tmp_pc;
+	ifid.NPC = 0;
+	for (haltflag=0; haltflag != 1; total_clocks++)	/* ends if halt flag is active */
 	{	
 		if (memwb.ready == 1)
 			wb();
@@ -286,7 +290,11 @@ int main(int argc, char *argv[])
 			ex();
 		if (ifid.ready == 1)
 			id();
+		tmp_pc = ifid.NPC;
 		fetch();
+		if (tmp_pc == ifid.NPC)
+			break;
+
 	}
 	printf("%i\n", total_clocks);
 	exit(0);
