@@ -31,104 +31,197 @@ ex_mem exmem;
 mem_wb memwb;
 MIPS RF[32];
 
-void if(int pcc) {
-	ifid.NPC = pcc + 4;
-	ifid.IR = mem[pcc/4]; 
+void if() {
+	ifid.NPC = PCCOUNT + 4;
+	ifid.IR = mem[PCCOUNT/4]; 
 }
 
-void id(if_id if_id1) {
+void id() {
 	int imm;
 
-	idex.NPC = if_id1.NPC;
-	idex.A = RF[(if_id1->IR >> 21) & 15]; /* pull reg value from rs */
-	idex.B = RF[(if_id1->IR >> 16) & 15]; /* pull reg value from rt */
+	idex.NPC = ifid.NPC;
+	idex.A = RF[(ifid->IR >> 21) & 15]; /* pull reg value from rs */
+	idex.B = RF[(ifid->IR >> 16) & 15]; /* pull reg value from rt */
 
-	imm = if_id1->IR & 0xFFFF;
+	imm = ifid->IR & 0xFFFF;
 	if (imm & 0x8000)	/* if imm needs 1 fill for negitive */
 		idex.Imm = ((imm ^ 0xFFFF)+1)*-1;
 	else
 		idex.Imm = imm;
 
-	idex.RS = (if_id1->IR >> 21) & 15;
-	idex.RS = (if_id1->IR >> 16) & 15;
-	idex.op = if_id1->IR >> 26;
-	idex.function = if_id1 & 0x3F;
-}
-
-void ex(id_ex id_ex1) {
-		exmem.branchpc = id_ex1.NPC + (id_ex1.Imm * 4);
-	exmem.op = id_ex1.op;
-	if (id_ex1.op == 0) {
-		switch (id_ex1.Function) {
-			case 0x20 : //add
-			case 0x21 : //add unsigned
-				
-				break;
-			case 0x22 : //sub
-			case 0x23 : //sub unsigned
-		
-				break;
-			case 0x24 : //and
-	
-				break;
-			case 0x27 : //nor
-
-				break;
-			case 0x25 : //or
-
-				break;
-			case 0x26 : //xor
-		
-				break;
-			case 0x00 : //shift left logical
-				
-				break;
-			case 0x02 : //shift right logical
-
-				break;
-			case 0x03 : //shift right arithmetic
-				
-				break;
-			case 0x04 : //shift left logical variable
-				
-				break;
-			case 0x06 : //shift right logical variable
-
-				break;
-			case 0x07 : //shift right arithmetic variable
-
-				break;
-
-			case 0x2A : //set less than
-
-				break;
-			case 0x2B : //set less than unsigned
+	idex.op = ifid->IR >> 26;
+	idex.function = ifid & 0x3F;
+ 	idex.RegWrite = 1;
+	idex.MemtoReg = 0;
+	if ((idex.op == 0) && (idex.function == 0x08)) {
+	    idex.RegWrite = 0;
+	 
 	} else {
-		switch (id_ex1.op)
+
+  		if (idex.op == 0x02 || idex.op == 0x02 || idex.op == 0x02 
+			|| idex.op == 0x02 || idex.op == 0x02 || idex.op == 0x02) {
+			idex.RegWrite = 0;
+		} 
 	}
+	
+	if (idex.op <= 0x25 && idex.op >= 0x0F)
+		idex.MemtoReg = 1;
 }
 
-void mem(ex_mem ex_mem1) {
-  if (cond == 0)
-    PCCOUNT = ex_mem1.branch_pc;
-  else if (cond == 1)
-    PCCOUNT = ex_mem1.AO;
-<<<<<<< HEAD
+void ex() {
+    exmem.branchpc = idex.NPC + (idex.Imm * 4);
+    exmem.op = idex.op;
+    exmem.RegWrite = idex.RegWrite;
+    exmem.MemtoReg = idex.MemtoReg;
+    if (idex.op == 0) {
+        switch (idex.Function) {
+            case 0x20 : //add
+                exmem.AO = idex.A + idex.B;
+                break;
+            case 0x21 : //add unsigned
+                exmem.AO = (unsigned int)idex.A + (unsigned int)idex.B;
+                break;
+            case 0x22 : //sub
+                exmem.AO = idex.A - idex.B;
+                break;
+            case 0x23 : //sub unsigned
+                exmem.AO = (unsigned int)idex.A - (unsigned int)idex.B;
+                break;
+            case 0x24 : //and
+                exmem.AO = idex.A & idex.B;
+                break;
+            case 0x27 : //nor
+                exmem.AO = ~(idex.A | idex.B);
+                break;
+            case 0x25 : //or
+                exmem.AO = idex.A | idex.B;
+                break;
+            case 0x26 : //xor
+                exmem.AO = idex.A ^ idex.B;
+                break;
+            case 0x00 : //shift left logical
+                exmem.AO = idex.A << idex.shamt;
+                break;
+            case 0x02 : //shift right logical
+                exmem.AO = idex.A >> idex.shamt;
+                break;
+            case 0x03 : //shift right arithmetic
+                exmem.AO = (signed int)idex.A >> idex.shamt;
+                break;
+            case 0x04 : //shift left logical variable
+                exmem.AO = idex.A << idex.B;            
+                break;
+            case 0x06 : //shift right logical variable
+                exmem.AO = idex.A >> idex.B;
+                break;
+            case 0x07 : //shift right arithmetic variable
+                exmem.AO = (signed int)idex.A >> idex.B;
+                break;
+            case 0x2A : //set less than
+                if (idex.A < idex.B)
+                    exmem.AO = 1;
+                else 
+                    exmem.AO = 0;
+                break;
+            case 0x2B : //set less than unsigned
+                if ((unsigned int)idex.A < (unsigned int)idex.B)
+                    exmem.AO = 1;
+                else 
+                    exmem.AO = 0;
+                break;
+            case 0x08 : //jump register
+                
+                break;
+            case 0x09 : //jump and link register
 
-  datareg[ex_mem1.B] = ex_mem1.AO
-    memwb.LDM = datareg[ex_mem1.B];
+                break;
+        }
+    } else {
+        switch (id_ex1.op) {
+            case 0x08 : //add immediate
+                exmem.AO = idex.A + idex.Imm;
+                break;
+            case 0x09 : //add unsigned immediate
+                exmem
+                break;
+            case 0x0C : //and immediate
 
-=======
+                break;
+            case 0x0D : //or immediate
+                
+                break;
+            case 0x0E : //xor immediate
 
-  datareg[ex_mem1.B] = ex_mem1.AO
-    memwb.LDM = datareg[ex_mem1.B];
+                break;
+            case 0x0A : //set less than immediate
 
->>>>>>> cf7bb5b21069c9eb7b3cd878c496ef1340a64e57
-  memwb.dest = ex_mem1.dest;
+                break;
+            case 0x0B : //set less than immediate unsigned
+
+                break;
+            case 0x02 : //jump
+
+                break;
+            case 0x03 : //jump and link
+
+                break;
+            case 0x20 : //load byte
+
+                break;
+            case 0x24 : //load byte unsigned
+                
+                break;
+            case 0x21 : //load halfword
+                
+                break;
+            case 0x25 : //load halfword unsigned
+
+                break;
+            case 0x0F : //load upper immediate
+
+                break;
+            case 0x23 : //load word
+
+                break;
+            case 0x28 : //store Byte
+
+                break;
+            case 0x29 : //store halfword
+
+                break;
+            case 0x2B : //store word
+
+                break;
+        }            
+    }
 }
 
-void wb(mem_wb mem_wb1) {
+void mem() {
+  memwb.RegWrite = exmem.RegWrite;
+  memwb.MemtoReg = exmem.MemtoReg;
+  if (exmem.op = )
+	exmem.cond = 2;
+  if (exmem.cond == 0)
+    PCCOUNT = exmem.branch_pc;
+  else if (exmem.cond == 1)
+    PCCOUNT = exmem.AO;
+  else if (exmem.cond == 2)
+    PCCOUNT = exmem.dest;
 
+  datareg[exmem.B] = exmem.AO
+  memwb.LDM = datareg[exmem.B];
+  memwb.dest = exmem.dest;
+  memwb.AO = exmem.AO;
+  memwb.op = exmem.op;
+}
+
+void wb() {
+  if (memwb.RegWrite) {
+    if (memwb.MemtoReg )
+      RF[memwb.dest] = memwb.LDM;
+    else
+      RF[memwb.dest] = memwb.AO;
+  }
 }
 
 main(int argc, char *argv[])

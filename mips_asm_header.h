@@ -27,11 +27,11 @@ struct id_ex
 	int A; /* ALU A in */
 	int B; /* ALU B in */
 	int Imm; /* sign extended immediate value */
-	int RS; /* RS field */
-	int RT; /* RT field */
 	int shamt; /* shift amount */
 	int op; /* op code */
 	int function; /* function code */
+	int RegWrite;
+	int MemtoReg;
   };
 struct ex_mem
   {
@@ -41,6 +41,8 @@ struct ex_mem
 	int B; /* B value potentail value being writen to memory */
 	int dest; /* destination of reg wright back */
 	int op; /* op code */
+	int RegWrite;
+	int MemtoReg;
   };
 struct mem_wb
   {
@@ -48,4 +50,6 @@ struct mem_wb
 	int AO; /* ALU out */
 	int dest; /* write back reg dest */
 	int op; /* op code */
+	int RegWrite;
+	int MemtoReg;
   };
