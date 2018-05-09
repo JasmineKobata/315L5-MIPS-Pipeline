@@ -29,7 +29,6 @@ MIPS RF[32];
 void fetch() {
 	ifid.IR = mem[ifid.NPC/4];
 	ifid.NPC = ifid.NPC + 4;
-	printf("IR: 0x%08X\n", ifid.IR);
 	ifid.ready = 1;
 }
 
@@ -46,7 +45,7 @@ void id() {
 	else
 		idex.Imm = imm;
 
-	idex.op = ifid.IR >> 26;
+	idex.op = (ifid.IR >> 26) & 0x3F;
 	idex.function = ifid.IR & 0x3F;
  	idex.RegWrite = 1;
 	idex.MemtoReg = 0;
@@ -65,9 +64,9 @@ void id() {
 		} 
 	}
 	
-	if (idex.op <= 0x25 && idex.op >= 0x0F)
+	if (idex.op >= 0x25 && idex.op <= 0x0F)
 		idex.MemtoReg = 1;
-	ifid.ready = 1;
+	idex.ready = 1;
 }
 
 void ex() {
@@ -278,21 +277,43 @@ int main(int argc, char *argv[])
 
 	clear();
 	int total_clocks = 0;
-	int tmp_pc;
 	ifid.NPC = 0;
 	for (haltflag=0; haltflag != 1; total_clocks++)	/* ends if halt flag is active */
 	{	
-		if (memwb.ready == 1)
+			printf("\nclock: %u_____________________________\n", total_clocks);
+		if (memwb.ready == 1) {
 			wb();
-		if (exmem.ready == 1)
+			printf("-------------write back----------\n");
+		}
+		if (exmem.ready == 1){
 			memory();
-		if (idex.ready == 1)
+			printf("-------------memory--------------\n");
+			printf("    LDM: %u\n    AO: %u\n    dest: %u\n", memwb.LDM, memwb.AO, memwb.dest);
+			printf("    op: %02X\n    RegWrite: %u\n    MemtoReg: %u\n", memwb.op, memwb.AO, memwb.dest);
+			printf("    ready: %u\n", memwb.ready);
+			
+		}
+		if (idex.ready == 1) {
 			ex();
-		if (ifid.ready == 1)
+			printf("-------------execute-------------\n");
+			printf("    branch_pc: 0x%03X\n    cond: %u\n    AO: %u\n", exmem.branch_pc, exmem.cond, exmem.AO);
+			printf("    B: %u\n    dest: %u\n    op: 0x%02X\n", exmem.B, exmem.dest, exmem.op);
+			printf("    RegWrite: %u\n    MemtoReg: %u\n    jumpword: 0x%07X\n", exmem.RegWrite, exmem.MemtoReg, exmem.jumpword);
+			printf("    function: 0x%03X\n    RS: %u\n    ready: %u\n", exmem.function, exmem.RS, exmem.ready);
+		}
+		if (ifid.ready == 1) {
 			id();
-		tmp_pc = ifid.NPC;
+			printf("-------------decode-------------\n");
+			printf("    NPC: 0x%03X\n    A: %u\n    B: %u\n", idex.NPC, idex.A, idex.B);
+			printf("    Imm: %u\n    shamt: %u\n    op: 0x%02X\n", idex.Imm, idex.shamt, idex.op);
+			printf("    function: 0x%02X\n    RegWrite: %u\n    MemtoReg: %u\n", idex.function, idex.RegWrite, idex.MemtoReg);
+			printf("    jumpword: 0x%07X\n    RS: %u\n    RT: %u\n", idex.jumpword, idex.RS, idex.RT);
+			printf("    ready: %u\n", idex.ready);
+		}
 		fetch();
-		if (tmp_pc == ifid.NPC)
+		printf("-------------fetch-------------\n");
+		printf("    NPC: 0x%03X\n    IR: 0x%08X\n    ready: %u\n", ifid.NPC, ifid.IR, ifid.ready);
+		if (ifid.NPC > 19*4)
 			break;
 
 	}
