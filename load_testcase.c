@@ -50,9 +50,12 @@ void id() {
 		idex.Imm = imm;
 
 	idex.op = ifid->IR >> 26;
-	idex.function = ifid & 0x3F;
+	idex.function = ifid->IR & 0x3F;
  	idex.RegWrite = 1;
 	idex.MemtoReg = 0;
+	idex.RD = (ifid->IR >> 11) & 15;
+	idex.RT = (ifid->IR >> 16) & 15;
+	idex.jumpword = ifid->IR & 0x3FFFFFF;
 	if ((idex.op == 0) && (idex.function == 0x08)) {
 	    idex.RegWrite = 0;
 	 
@@ -73,7 +76,10 @@ void ex() {
     exmem.op = idex.op;
     exmem.RegWrite = idex.RegWrite;
     exmem.MemtoReg = idex.MemtoReg;
+	exmem.B = idex.B;
+	exmem.jumpword = idex.jumpword;
     if (idex.op == 0) {
+		exmem.dest = idex.RD;
         switch (idex.Function) {
             case 0x20 : //add
                 exmem.AO = idex.A + idex.B;
@@ -128,91 +134,73 @@ void ex() {
                     exmem.AO = 1;
                 else 
                     exmem.AO = 0;
-                break;
-            case 0x08 : //jump register
-                
-                break;
-            case 0x09 : //jump and link register
-
-                break;
         }
     } else {
-        switch (id_ex1.op) {
+		exmem.dest = idex.RT;
+        switch (idex.op) {
+
+	    	case 0x20 : //load byte
+            case 0x24 : //load byte unsigned
+            case 0x21 : //load halfword
+            case 0x25 : //load halfword unsigned
+            case 0x0F : //load upper immediate
+            case 0x23 : //load word
+            case 0x28 : //store Byte
+            case 0x29 : //store halfword
+            case 0x2B : //store word
             case 0x08 : //add immediate
                 exmem.AO = idex.A + idex.Imm;
                 break;
             case 0x09 : //add unsigned immediate
-                exmem
+                exmem.AO = (unsigned int)idex.A + (unsigned int)idex.Imm;
                 break;
             case 0x0C : //and immediate
-
+				exmem.AO = idex.A & idex.Imm;
                 break;
             case 0x0D : //or immediate
-                
+                exmem.AO = idex.A | idex.Imm;
                 break;
             case 0x0E : //xor immediate
-
+				exmem.AO = idex.A ^ idex.Imm;
                 break;
             case 0x0A : //set less than immediate
-
+				if (idex.A < idex.Imm)
+                    exmem.AO = 1;
+                else 
+                    exmem.AO = 0;
                 break;
             case 0x0B : //set less than immediate unsigned
+				if ((unsigned int)idex.A < (unsigned int)idex.Imm)
+                    exmem.AO = 1;
+                else 
+                    exmem.AO = 0;
+                break;
 
-                break;
-            case 0x02 : //jump
-
-                break;
-            case 0x03 : //jump and link
-
-                break;
-            case 0x20 : //load byte
-
-                break;
-            case 0x24 : //load byte unsigned
-                
-                break;
-            case 0x21 : //load halfword
-                
-                break;
-            case 0x25 : //load halfword unsigned
-
-                break;
-            case 0x0F : //load upper immediate
-
-                break;
-            case 0x23 : //load word
-
-                break;
-            case 0x28 : //store Byte
-
-                break;
-            case 0x29 : //store halfword
-
-                break;
-            case 0x2B : //store word
-
-                break;
         }            
     }
+	if (exmem.AO == 0)
+		exmem.cond = 1;
+	else
+		exmem.cond = 0;
 }
 
 void mem() {
-  memwb.RegWrite = exmem.RegWrite;
-  memwb.MemtoReg = exmem.MemtoReg;
-  if (exmem.op = )
-	exmem.cond = 2;
-  if (exmem.cond == 0)
-    PCCOUNT = exmem.branch_pc;
-  else if (exmem.cond == 1)
-    PCCOUNT = exmem.AO;
-  else if (exmem.cond == 2)
-    PCCOUNT = exmem.dest;
+	memwb.RegWrite = exmem.RegWrite;
+	memwb.MemtoReg = exmem.MemtoReg;
+	if (exmem.op == 0x02 || exmem.ope == 0x03)
+		PCCOUNT = (exmem.jumpword * 4);
+	if (exmem.op == 0x00
+		PCCOUNT = exmem.AO;
+	else if (exmem.cond == 2)
+		PCCOUNT = exmem.dest;
 
-  datareg[exmem.B] = exmem.AO
-  memwb.LDM = datareg[exmem.B];
-  memwb.dest = exmem.dest;
-  memwb.AO = exmem.AO;
-  memwb.op = exmem.op;
+
+	if (exmem.op =
+	datareg[exmem.B] = exmem.AO
+	memwb.LDM = datareg[exmem.B];
+	memwb.dest = exmem.dest;
+	memwb.AO = exmem.AO;
+	memwb.op = exmem.op;
 }
 
 void wb() {

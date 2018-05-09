@@ -32,6 +32,7 @@ struct id_ex
 	int function; /* function code */
 	int RegWrite;
 	int MemtoReg;
+	int jumpword;
   };
 struct ex_mem
   {
@@ -41,8 +42,9 @@ struct ex_mem
 	int B; /* B value potentail value being writen to memory */
 	int dest; /* destination of reg wright back */
 	int op; /* op code */
-	int RegWrite;
+	int RegWrite;	
 	int MemtoReg;
+	int jumpword;
   };
 struct mem_wb
   {
